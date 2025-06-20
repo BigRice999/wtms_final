@@ -134,43 +134,56 @@ class _LoginScreenState extends State<LoginScreen> {
     }
 
     var url = Uri.parse("http://10.0.2.2/wtms_api/login_worker.php");
-    var response = await http.post(url, body: {
-      "email": email,
-      "password": password,
-    });
+    debugPrint("📤 Sending login request to $url with email=$email");
 
-    if (response.statusCode == 200) {
-      var jsondata = json.decode(response.body);
-      if (jsondata['status'] == 'success') {
-        var workerData = jsondata['data'];
-        Worker worker = Worker.fromJson(workerData);
+    try {
+      var response = await http.post(url, body: {
+        "email": email,
+        "password": password,
+      });
 
-        SharedPreferences prefs = await SharedPreferences.getInstance();
-        await prefs.setString('worker_id', worker.id.toString());
+      debugPrint("📥 Status: ${response.statusCode}");
+      debugPrint("📦 Response: ${response.body}");
 
-        if (isChecked) {
-          await storeCredentials(email, password, true);
+      if (response.statusCode == 200) {
+        var jsondata = json.decode(response.body);
+
+        if (jsondata['status'] == 'success') {
+          var workerData = jsondata['data'];
+          Worker worker = Worker.fromJson(workerData);
+
+          SharedPreferences prefs = await SharedPreferences.getInstance();
+          await prefs.setString('worker_id', worker.id.toString());
+
+          if (isChecked) {
+            await storeCredentials(email, password, true);
+          } else {
+            await storeCredentials("", "", false);
+          }
+
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text("Welcome ${worker.name}"), backgroundColor: Colors.green),
+          );
+
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(builder: (context) => MainTabScreen(worker: worker)),
+          );
         } else {
-          await storeCredentials("", "", false);
+          String message = jsondata['message'] ?? "Login failed. Email not registered.";
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text(message), backgroundColor: Colors.red),
+          );
         }
-
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text("Welcome ${worker.name}"), backgroundColor: Colors.green),
-        );
-
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(builder: (context) => MainTabScreen(worker: worker)),
-        );
       } else {
-        String message = jsondata['message'] ?? "Login failed. Email not registered.";
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(message), backgroundColor: Colors.red),
+          const SnackBar(content: Text("Server error"), backgroundColor: Colors.red),
         );
       }
-    } else {
+    } catch (e) {
+      debugPrint("❌ Login exception: $e");
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Server error"), backgroundColor: Colors.red),
+        SnackBar(content: Text("Login failed: $e"), backgroundColor: Colors.red),
       );
     }
   }

@@ -19,6 +19,9 @@ class _SubmissionHistoryScreenState extends State<SubmissionHistoryScreen> {
   @override
   void initState() {
     super.initState();
+    debugPrint("🔁 SubmissionHistoryScreen initState called");
+    isLoading = true;
+    submissions = [];
     fetchSubmissions();
   }
 
@@ -93,7 +96,6 @@ class _SubmissionHistoryScreenState extends State<SubmissionHistoryScreen> {
                   ),
                 ),
               ),
-              
               const SizedBox(height: 10),
               TextField(
                 controller: controller,
@@ -103,7 +105,6 @@ class _SubmissionHistoryScreenState extends State<SubmissionHistoryScreen> {
                   border: OutlineInputBorder(),
                 ),
               ),
-
               const SizedBox(height: 20),
               Align(
                 alignment: Alignment.centerRight,
@@ -195,9 +196,8 @@ class _SubmissionHistoryScreenState extends State<SubmissionHistoryScreen> {
           ),
         ],
       ),
-      
       body: Container(
-        padding: const EdgeInsets.fromLTRB(30, 20, 30, 30), // unify padding 
+        padding: const EdgeInsets.fromLTRB(30, 20, 30, 30),
         decoration: const BoxDecoration(
           gradient: LinearGradient(
             colors: [Color.fromARGB(255, 159, 232, 205), Colors.white],
@@ -218,7 +218,7 @@ class _SubmissionHistoryScreenState extends State<SubmissionHistoryScreen> {
                       final text = item['submission_text'] ?? '';
                       final preview = text.length > 30 ? text.substring(0, 30) + '...' : text;
 
-                      return Container( // Display submitted tasks
+                      return Container(
                         margin: const EdgeInsets.only(bottom: 20), 
                         padding: const EdgeInsets.all(30),
                         decoration: BoxDecoration(
@@ -229,17 +229,16 @@ class _SubmissionHistoryScreenState extends State<SubmissionHistoryScreen> {
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Row( // Task title + edit icon
+                            Row(
                               mainAxisAlignment: MainAxisAlignment.spaceBetween,
                               children: [
-                                Text( // Task Title
+                                Text(
                                   title,
                                   style: const TextStyle(
                                     fontSize: 20,
                                     fontWeight: FontWeight.bold,
                                   ),
                                 ),
-                                
                                 GestureDetector(
                                   onTap: () => _showEditPopup(item),
                                   child: Container(
@@ -254,13 +253,13 @@ class _SubmissionHistoryScreenState extends State<SubmissionHistoryScreen> {
                               ],
                             ),
                             const SizedBox(height: 5),
-                            Text( // Submission ID
+                            Text(
                               "Submission ID: $id",
                               style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
                             ),
                             const SizedBox(height: 10),
-                            Container( // Submitted date & time
-                              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+                            Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 5),
                               decoration: BoxDecoration(
                                 color: const Color.fromARGB(221, 89, 80, 72),
                               ),
@@ -272,7 +271,7 @@ class _SubmissionHistoryScreenState extends State<SubmissionHistoryScreen> {
                               ),
                             ),
                             const SizedBox(height: 10),
-                            Text( // 1 line to preview submission detail
+                            Text(
                               preview,
                               style: const TextStyle(fontSize: 15),
                               maxLines: 1,

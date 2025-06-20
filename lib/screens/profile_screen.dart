@@ -20,6 +20,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
   File? _image;
   bool isEditing = false;
   bool isInitialized = false;
+  bool hasFetched = false; // Add flag to avoid fetching when screen not active
 
   late TextEditingController emailController;
   late TextEditingController phoneController;
@@ -35,7 +36,15 @@ class _ProfileScreenState extends State<ProfileScreen> {
     phoneController = TextEditingController();
     addressController = TextEditingController();
     birthController = TextEditingController();
-    fetchProfile();
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (!hasFetched) {
+      fetchProfile();
+      hasFetched = true;
+    }
   }
 
   Future<void> fetchProfile() async {
@@ -132,7 +141,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
       headers: {'Content-Type': 'application/json'},
       body: json.encode({
         'worker_id': widget.worker.id,
-        'name': widget.worker.name, 
+        'name': widget.worker.name,
         'email': emailController.text,
         'phone': phoneController.text,
         'address': addressController.text,
@@ -173,7 +182,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
     if (confirmed == true) {
       SharedPreferences prefs = await SharedPreferences.getInstance();
-      await prefs.remove('worker_id'); // Keep remember me if ticked before log in
+      await prefs.remove('worker_id');
       Navigator.pushAndRemoveUntil(
         context,
         MaterialPageRoute(builder: (context) => const LoginScreen()),
@@ -181,7 +190,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
       );
     }
   }
-
 
   Widget _buildTextField(String label, TextEditingController controller,
       {bool isAddress = false, VoidCallback? onTap}) {
@@ -205,7 +213,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
   Future<void> _selectDate() async {
     if (!isEditing) return;
-    final picked = await showDatePicker( // select birth date from calendar between 1950~2100
+    final picked = await showDatePicker(
       context: context,
       initialDate: DateTime.tryParse(birthController.text) ?? DateTime(2000),
       firstDate: DateTime(1950),
@@ -230,14 +238,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
       appBar: AppBar(
         toolbarHeight: 60,
         title: const Text(
-          "My Profile", 
-        style: TextStyle(
-                fontSize: 25, 
-                fontWeight: FontWeight.bold ,
-                color: Color.fromARGB(255, 218, 131, 0)
-                )
+          "My Profile",
+          style: TextStyle(
+              fontSize: 25,
+              fontWeight: FontWeight.bold,
+              color: Color.fromARGB(255, 218, 131, 0)),
         ),
-        
         backgroundColor: Colors.transparent,
       ),
 
@@ -248,7 +254,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
             begin: Alignment.topCenter,
           ),
         ),
-        
         padding: const EdgeInsets.fromLTRB(30, 130, 30, 30),
         child: SingleChildScrollView(
           child: Column(
@@ -260,7 +265,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     children: [
                       GestureDetector(
                         onTap: _showImageSourceDialog,
-                        child: CircleAvatar( // profile picture
+                        child: CircleAvatar(
                           radius: 65,
                           backgroundImage: _image != null
                               ? FileImage(_image!)
@@ -269,8 +274,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                   : const AssetImage('assets/images/profile.png')) as ImageProvider,
                         ),
                       ),
-
-                      Positioned( // camera icon at the bottom right of avatar
+                      Positioned(
                         bottom: 0,
                         right: 0,
                         child: GestureDetector(
@@ -284,20 +288,19 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       ),
                     ],
                   ),
-
                   const SizedBox(width: 30),
                   Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text(widget.worker.name, // display user name
-                            style: const TextStyle(fontSize: 25, fontWeight: FontWeight.bold)
-                            ),
-
-                        const SizedBox(height: 6), // box to display ID
+                        Text(widget.worker.name,
+                            style: const TextStyle(fontSize: 25, fontWeight: FontWeight.bold)),
+                        const SizedBox(height: 6),
                         Container(
                           padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
-                          decoration: BoxDecoration(color: const Color.fromARGB(221, 88, 19, 19), borderRadius: BorderRadius.circular(10)),
+                          decoration: BoxDecoration(
+                              color: const Color.fromARGB(221, 88, 19, 19),
+                              borderRadius: BorderRadius.circular(10)),
                           child: Text("ID: ${widget.worker.id}",
                               style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
                         ),
@@ -306,8 +309,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   ),
                 ],
               ),
-              
-              const SizedBox(height: 1), // row for edit icon
+              const SizedBox(height: 1),
               Row(
                 mainAxisAlignment: MainAxisAlignment.end,
                 children: [
@@ -321,13 +323,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   ),
                 ],
               ),
-              
-              const SizedBox(height: 5), // container for the data allowed to edit only
+              const SizedBox(height: 5),
               _buildTextField("Email", emailController),
               _buildTextField("Phone Number", phoneController),
               _buildTextField("Address", addressController, isAddress: true),
               _buildTextField("Birth Date", birthController, onTap: _selectDate),
-             
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                 margin: const EdgeInsets.only(bottom: 24),
@@ -336,8 +336,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   borderRadius: BorderRadius.circular(20),
                   border: Border.all(color: const Color.fromARGB(255, 228, 246, 158)),
                 ),
-
-                child: DropdownButtonFormField<String>( // drop down to select Male of Female for gender
+                child: DropdownButtonFormField<String>(
                   decoration: const InputDecoration.collapsed(hintText: ''),
                   value: selectedGender.isNotEmpty ? selectedGender : null,
                   items: ["Male", "Female"]
@@ -346,8 +345,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   onChanged: isEditing ? (val) => setState(() => selectedGender = val!) : null,
                 ),
               ),
-
-              ElevatedButton( // NEW: moving LOG OUT button to the bottom of My Profile
+              ElevatedButton(
                 onPressed: () => _logout(context),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Colors.red,
